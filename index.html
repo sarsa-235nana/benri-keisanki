@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>便利計算機</title>
 <style>
   :root{
@@ -185,6 +186,37 @@
     color:var(--good);
     font-weight:800;
   }
+  .price-compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .price-box{
+    border-radius:12px;
+    padding:12px;
+    background:#f3f5f8;
+    border:1px solid var(--line);
+  }
+  .price-box.cheaper{
+    background:#dff5e4;
+    border:2px solid #2f8f46;
+  }
+  .price-box .label{
+    font-weight:800;
+    margin-bottom:4px;
+  }
+  .cheap-badge{
+    display:inline-block;
+    margin-left:6px;
+    padding:2px 7px;
+    border-radius:999px;
+    background:#2f8f46;
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+    vertical-align:2px;
+  }
   .watt-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -221,6 +253,7 @@
     .grid3{grid-template-columns:1fr}
     .grid2{grid-template-columns:1fr}
     .product-row{grid-template-columns:1fr}
+    .price-compare-grid{grid-template-columns:1fr}
     .watt-grid{grid-template-columns:1fr 1fr}
   }
 </style>
@@ -512,6 +545,8 @@ $('priceCalc').addEventListener('click', () => {
   if (mode === 'area') unitLabel = '1㎡';
 
   let comparison = '';
+  let aClass = 'price-box';
+  let bClass = 'price-box';
   if (Math.abs(a-b) < 1e-12) {
     comparison = 'AとBは同じ単価です。';
   } else {
@@ -520,12 +555,22 @@ $('priceCalc').addEventListener('click', () => {
     const expensive = Math.max(a,b);
     const diffPct = (1 - cheap/expensive) * 100;
     comparison = `<span class="winner">商品${cheapName}の方が約${formatNumber(diffPct,1)}%安い</span>`;
+    if (a < b) {
+      aClass += ' cheaper';
+    } else {
+      bClass += ' cheaper';
+    }
   }
 
+  const aBadge = a < b ? '<span class="cheap-badge">安い！</span>' : '';
+  const bBadge = b < a ? '<span class="cheap-badge">安い！</span>' : '';
+
   r.innerHTML =
-    `<div><strong>商品A：</strong>${unitLabel}あたり ${formatNumber(a,4)}円（税込換算）</div>` +
-    `<div><strong>商品B：</strong>${unitLabel}あたり ${formatNumber(b,4)}円（税込換算）</div>` +
-    `<div style="margin-top:8px">${comparison}</div>`;
+    `<div class="price-compare-grid">` +
+      `<div class="${aClass}"><div class="label">商品A ${aBadge}</div><div>${unitLabel}あたり <strong>${formatNumber(a,4)}円</strong></div><div class="small">税込換算</div></div>` +
+      `<div class="${bClass}"><div class="label">商品B ${bBadge}</div><div>${unitLabel}あたり <strong>${formatNumber(b,4)}円</strong></div><div class="small">税込換算</div></div>` +
+    `</div>` +
+    `<div>${comparison}</div>`;
   r.classList.remove('hidden');
 });
 
