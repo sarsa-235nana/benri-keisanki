@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>便利計算機</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --card:#fff;
+    --text:#222;
+    --muted:#6b7280;
+    --line:#d9dde3;
+    --accent:#2f6fed;
+    --accent-soft:#eaf0ff;
+    --good:#137333;
+    --warn:#9a6700;
+    --shadow:0 6px 24px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:16px 14px 36px;
+  }
+  h1{
+    font-size:24px;
+    margin:4px 0 14px;
+    text-align:center;
+  }
+  .tabs{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-bottom:14px;
+    position:sticky;
+    top:0;
+    z-index:5;
+    padding:8px 0;
+    background:var(--bg);
+  }
+  .tab{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    padding:12px 8px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tab.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{
+    background:var(--card);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:var(--shadow);
+    margin-bottom:14px;
+  }
+  h2{
+    font-size:21px;
+    margin:0 0 12px;
+  }
+  h3{
+    font-size:18px;
+    margin:4px 0 10px;
+  }
+  label{
+    display:block;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  input, select, button{
+    font:inherit;
+  }
+  input, select{
+    width:100%;
+    min-height:48px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    background:#fff;
+    font-size:18px;
+  }
+  input:focus, select:focus{
+    outline:3px solid rgba(47,111,237,.18);
+    border-color:var(--accent);
+  }
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+  }
+  .btn{
+    width:100%;
+    min-height:50px;
+    border:none;
+    border-radius:12px;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    font-size:18px;
+    margin-top:12px;
+    cursor:pointer;
+  }
+  .btn.secondary{
+    background:#eef1f5;
+    color:#222;
+  }
+  .result{
+    margin-top:14px;
+    padding:14px;
+    border-radius:12px;
+    background:var(--accent-soft);
+    font-size:18px;
+    line-height:1.6;
+  }
+  .big{
+    font-size:26px;
+    font-weight:800;
+  }
+  .small{
+    font-size:13px;
+    color:var(--muted);
+  }
+  .radio-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+  .radio-chip input{
+    display:none;
+  }
+  .radio-chip span{
+    display:block;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:9px 12px;
+    background:#fff;
+    cursor:pointer;
+  }
+  .radio-chip input:checked + span{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .product-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:10px;
+  }
+  .product{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+  }
+  .product-title{
+    font-weight:800;
+    margin-bottom:10px;
+  }
+  .winner{
+    color:var(--good);
+    font-weight:800;
+  }
+  .watt-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:12px;
+  }
+  .watt-box{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:13px;
+    background:#fff;
+    text-align:center;
+  }
+  .watt-box .w{
+    font-weight:800;
+    font-size:20px;
+  }
+  .watt-box .t{
+    font-weight:800;
+    font-size:24px;
+    margin-top:3px;
+  }
+  .note{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:10px;
+    line-height:1.5;
+  }
+  .hidden{display:none!important}
+  @media (max-width:520px){
+    .wrap{padding:10px 10px 28px}
+    h1{font-size:21px}
+    .tab{font-size:14px;padding:11px 4px}
+    .grid3{grid-template-columns:1fr}
+    .grid2{grid-template-columns:1fr}
+    .product-row{grid-template-columns:1fr}
+    .watt-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>便利計算機</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="time">時間換算</button>
+    <button class="tab" data-tab="price">商品比較</button>
+    <button class="tab" data-tab="microwave">レンジ換算</button>
+  </div>
+
+  <!-- 時間換算 -->
+  <section id="time" class="panel active">
+    <div class="card">
+      <h2>時間換算</h2>
+      <div class="grid2">
+        <div>
+          <label for="timeValue">数値</label>
+          <input id="timeValue" type="number" min="0" step="any" inputmode="decimal" placeholder="例：200000">
+        </div>
+        <div>
+          <label for="timeUnit">単位</label>
+          <select id="timeUnit">
+            <option value="sec">秒</option>
+            <option value="min">分</option>
+            <option value="hour">時間</option>
+            <option value="day">日</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" id="timeCalc">換算する</button>
+      <div class="result hidden" id="timeResult"></div>
+    </div>
+  </section>
+
+  <!-- 商品比較 -->
+  <section id="price" class="panel">
+    <div class="card">
+      <h2>商品価格比較</h2>
+
+      <label>比較方法</label>
+      <div class="radio-row">
+        <label class="radio-chip">
+          <input type="radio" name="priceMode" value="count" checked>
+          <span>個数</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" name="priceMode" value="amount">
+          <span>容量・重量</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" name="priceMode" value="length">
+          <span>長さ×個数</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" name="priceMode" value="area">
+          <span>幅×長さ×個数</span>
+        </label>
+      </div>
+
+      <div class="product-row">
+        <div class="product">
+        <div class="product-title">商品A</div>
+        <div class="grid2">
+          <div>
+            <label>価格</label>
+            <input id="aPrice" type="number" min="0" step="any" inputmode="decimal" placeholder="例：980">
+          </div>
+          <div>
+            <label>価格の状態</label>
+            <select id="aTax">
+              <option value="1">税込</option>
+              <option value="1.10">税別10%</option>
+              <option value="1.08">税別8%</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:10px">
+          <div class="field-count">
+            <label>個数</label>
+            <input id="aCount" type="number" min="0" step="any" inputmode="decimal" placeholder="例：12">
+          </div>
+          <div class="field-amount hidden">
+            <label>総容量・重量</label>
+            <input id="aAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="例：500">
+          </div>
+          <div class="field-length hidden">
+            <label>1個の長さ（m）</label>
+            <input id="aLength" type="number" min="0" step="any" inputmode="decimal" placeholder="例：50">
+          </div>
+          <div class="field-width hidden">
+            <label>幅（cm）</label>
+            <input id="aWidth" type="number" min="0" step="any" inputmode="decimal" placeholder="例：11.4">
+          </div>
+        </div>
+      </div>
+
+        <div class="product">
+        <div class="product-title">商品B</div>
+        <div class="grid2">
+          <div>
+            <label>価格</label>
+            <input id="bPrice" type="number" min="0" step="any" inputmode="decimal" placeholder="例：1180">
+          </div>
+          <div>
+            <label>価格の状態</label>
+            <select id="bTax">
+              <option value="1">税込</option>
+              <option value="1.10">税別10%</option>
+              <option value="1.08">税別8%</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:10px">
+          <div class="field-count">
+            <label>個数</label>
+            <input id="bCount" type="number" min="0" step="any" inputmode="decimal" placeholder="例：18">
+          </div>
+          <div class="field-amount hidden">
+            <label>総容量・重量</label>
+            <input id="bAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="例：600">
+          </div>
+          <div class="field-length hidden">
+            <label>1個の長さ（m）</label>
+            <input id="bLength" type="number" min="0" step="any" inputmode="decimal" placeholder="例：40">
+          </div>
+          <div class="field-width hidden">
+            <label>幅（cm）</label>
+            <input id="bWidth" type="number" min="0" step="any" inputmode="decimal" placeholder="例：10.7">
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+      <button class="btn" id="priceCalc">比較する</button>
+      <div class="result hidden" id="priceResult"></div>
+      <div class="note">容量・重量は、A/Bで同じ単位（g、kg、mlなど）を使ってください。</div>
+    </div>
+  </section>
+
+  <!-- レンジ換算 -->
+  <section id="microwave" class="panel">
+    <div class="card">
+      <h2>電子レンジ時間換算</h2>
+      <div class="grid3">
+        <div>
+          <label for="srcWatt">商品の表示W数</label>
+          <input id="srcWatt" type="number" min="1" step="1" inputmode="numeric" placeholder="例：600">
+        </div>
+        <div>
+          <label for="srcMin">分</label>
+          <input id="srcMin" type="number" min="0" step="1" inputmode="numeric" placeholder="例：3">
+        </div>
+        <div>
+          <label for="srcSec">秒</label>
+          <input id="srcSec" type="number" min="0" step="1" inputmode="numeric" placeholder="例：30">
+        </div>
+      </div>
+      <button class="btn" id="mwCalc">4種類に換算する</button>
+      <div id="mwResult" class="hidden">
+        <div class="watt-grid">
+          <div class="watt-box"><div class="w">200W</div><div class="t" id="mw200">--</div></div>
+          <div class="watt-box"><div class="w">500W</div><div class="t" id="mw500">--</div></div>
+          <div class="watt-box"><div class="w">600W</div><div class="t" id="mw600">--</div></div>
+          <div class="watt-box"><div class="w">1000W</div><div class="t" id="mw1000">--</div></div>
+        </div>
+        <div class="note">計算上の目安です。食品の種類・量・容器・レンジの個体差で加熱具合は変わります。</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $(btn.dataset.tab).classList.add('active');
+  });
+});
+
+function formatNumber(n, max=4){
+  return Number(n.toFixed(max)).toLocaleString('ja-JP');
+}
+
+function splitSeconds(totalSeconds){
+  let sec = Math.round(totalSeconds);
+  const years = Math.floor(sec / (365 * 86400)); sec %= (365 * 86400);
+  const days = Math.floor(sec / 86400); sec %= 86400;
+  const hours = Math.floor(sec / 3600); sec %= 3600;
+  const mins = Math.floor(sec / 60); sec %= 60;
+  return {years, days, hours, mins, sec};
+}
+
+function humanTime(totalSeconds){
+  const t = splitSeconds(totalSeconds);
+  const parts = [];
+  if (t.years) parts.push(`${t.years}年`);
+  if (t.days) parts.push(`${t.days}日`);
+  if (t.hours) parts.push(`${t.hours}時間`);
+  if (t.mins) parts.push(`${t.mins}分`);
+  if (t.sec || parts.length === 0) parts.push(`${t.sec}秒`);
+  return parts.join(' ');
+}
+
+$('timeCalc').addEventListener('click', () => {
+  const v = parseFloat($('timeValue').value);
+  const unit = $('timeUnit').value;
+  const r = $('timeResult');
+  if (!Number.isFinite(v) || v < 0) {
+    r.classList.remove('hidden');
+    r.textContent = '数値を入力してください。';
+    return;
+  }
+  const factor = {sec:1, min:60, hour:3600, day:86400}[unit];
+  const total = v * factor;
+  r.innerHTML =
+    `<div class="big">${humanTime(total)}</div>` +
+    `<div class="small" style="margin-top:8px">` +
+    `${formatNumber(total, 4)} 秒 ／ ${formatNumber(total/60, 4)} 分 ／ ${formatNumber(total/3600, 4)} 時間 ／ ${formatNumber(total/86400, 4)} 日` +
+    `</div>`;
+  r.classList.remove('hidden');
+});
+
+function updatePriceFields(){
+  const mode = document.querySelector('input[name="priceMode"]:checked').value;
+  document.querySelectorAll('.field-count,.field-amount,.field-length,.field-width').forEach(el => el.classList.add('hidden'));
+  if (mode === 'count') {
+    document.querySelectorAll('.field-count').forEach(el => el.classList.remove('hidden'));
+  } else if (mode === 'amount') {
+    document.querySelectorAll('.field-amount').forEach(el => el.classList.remove('hidden'));
+  } else if (mode === 'length') {
+    document.querySelectorAll('.field-count,.field-length').forEach(el => el.classList.remove('hidden'));
+  } else if (mode === 'area') {
+    document.querySelectorAll('.field-count,.field-length,.field-width').forEach(el => el.classList.remove('hidden'));
+  }
+}
+document.querySelectorAll('input[name="priceMode"]').forEach(r => r.addEventListener('change', updatePriceFields));
+
+function taxable(prefix){
+  const price = parseFloat($(prefix+'Price').value);
+  const tax = parseFloat($(prefix+'Tax').value);
+  return price * tax;
+}
+
+function unitValue(prefix, mode){
+  if (mode === 'count') {
+    return parseFloat($(prefix+'Count').value);
+  }
+  if (mode === 'amount') {
+    return parseFloat($(prefix+'Amount').value);
+  }
+  if (mode === 'length') {
+    return parseFloat($(prefix+'Count').value) * parseFloat($(prefix+'Length').value);
+  }
+  if (mode === 'area') {
+    const count = parseFloat($(prefix+'Count').value);
+    const lengthM = parseFloat($(prefix+'Length').value);
+    const widthCm = parseFloat($(prefix+'Width').value);
+    return count * lengthM * (widthCm / 100); // ㎡
+  }
+}
+
+$('priceCalc').addEventListener('click', () => {
+  const mode = document.querySelector('input[name="priceMode"]:checked').value;
+  const aPrice = taxable('a'), bPrice = taxable('b');
+  const aUnit = unitValue('a', mode), bUnit = unitValue('b', mode);
+  const r = $('priceResult');
+
+  if (![aPrice,bPrice,aUnit,bUnit].every(v => Number.isFinite(v) && v > 0)) {
+    r.classList.remove('hidden');
+    r.textContent = '必要な項目をすべて入力してください。';
+    return;
+  }
+
+  const a = aPrice / aUnit;
+  const b = bPrice / bUnit;
+
+  let unitLabel = '1個';
+  if (mode === 'amount') unitLabel = '1単位';
+  if (mode === 'length') unitLabel = '1m';
+  if (mode === 'area') unitLabel = '1㎡';
+
+  let comparison = '';
+  if (Math.abs(a-b) < 1e-12) {
+    comparison = 'AとBは同じ単価です。';
+  } else {
+    const cheapName = a < b ? 'A' : 'B';
+    const cheap = Math.min(a,b);
+    const expensive = Math.max(a,b);
+    const diffPct = (1 - cheap/expensive) * 100;
+    comparison = `<span class="winner">商品${cheapName}の方が約${formatNumber(diffPct,1)}%安い</span>`;
+  }
+
+  r.innerHTML =
+    `<div><strong>商品A：</strong>${unitLabel}あたり ${formatNumber(a,4)}円（税込換算）</div>` +
+    `<div><strong>商品B：</strong>${unitLabel}あたり ${formatNumber(b,4)}円（税込換算）</div>` +
+    `<div style="margin-top:8px">${comparison}</div>`;
+  r.classList.remove('hidden');
+});
+
+function formatClock(sec){
+  sec = Math.max(0, Math.round(sec));
+  const min = Math.floor(sec/60);
+  const s = sec % 60;
+  return min > 0 ? `${min}分${String(s).padStart(2,'0')}秒` : `${s}秒`;
+}
+
+$('mwCalc').addEventListener('click', () => {
+  const srcW = parseFloat($('srcWatt').value);
+  const min = parseFloat($('srcMin').value || '0');
+  const sec = parseFloat($('srcSec').value || '0');
+
+  if (!Number.isFinite(srcW) || srcW <= 0 || !Number.isFinite(min) || min < 0 || !Number.isFinite(sec) || sec < 0 || (min === 0 && sec === 0)) {
+    alert('商品のW数と時間を入力してください。');
+    return;
+  }
+
+  const totalSec = min*60 + sec;
+  [200,500,600,1000].forEach(w => {
+    const converted = totalSec * srcW / w;
+    $('mw'+w).textContent = formatClock(converted);
+  });
+  $('mwResult').classList.remove('hidden');
+});
+
+updatePriceFields();
+</script>
+</body>
+</html>
