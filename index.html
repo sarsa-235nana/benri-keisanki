@@ -239,6 +239,28 @@
     font-size:24px;
     margin-top:3px;
   }
+
+  .counter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+  .counter-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;min-width:0;}
+  .counter-title{width:100%;font-size:18px;font-weight:800;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:6px 2px 8px;margin-bottom:12px;min-height:auto;}
+  .counter-title:focus{outline:none;border-bottom:2px solid var(--accent);}
+  .counter-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .counter-current{font-size:42px;line-height:1;font-weight:900;}
+  .counter-total-inline{font-size:22px;color:var(--muted);font-weight:700;}
+  .counter-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px;}
+  .counter-btn{min-height:50px;border:none;border-radius:12px;font-size:22px;font-weight:900;cursor:pointer;}
+  .counter-btn.minus{background:#eef1f5;color:#222;}
+  .counter-btn.plus{background:var(--accent);color:#fff;}
+  .counter-stats{display:grid;gap:6px;font-size:15px;margin-bottom:10px;}
+  .counter-remaining{font-size:18px;font-weight:900;padding:8px 10px;border-radius:10px;background:#f3f5f8;}
+  .counter-remaining.warn{background:#fff3bf;color:#7a5a00;}
+  .counter-remaining.danger{background:#ffd8d8;color:#9f1239;}
+  .counter-remaining.done{background:#dff5e4;color:#166534;}
+  .counter-setup{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+  .counter-setup input{font-size:16px;min-height:44px;}
+  .counter-memo{margin-top:8px;font-size:16px;min-height:44px;}
+  .counter-reset{width:100%;min-height:42px;margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#555;font-weight:700;cursor:pointer;}
+
   .note{
     font-size:13px;
     color:var(--muted);
@@ -254,6 +276,7 @@
     .grid2{grid-template-columns:1fr}
     .product-row{grid-template-columns:1fr}
     .price-compare-grid{grid-template-columns:1fr}
+    .counter-grid{grid-template-columns:1fr}
     .watt-grid{grid-template-columns:1fr 1fr}
   }
 </style>
@@ -262,10 +285,11 @@
 <div class="wrap">
   <h1>便利計算機</h1>
 
-  <div class="tabs">
+  <div class="tabs" style="grid-template-columns:repeat(4,1fr)">
     <button class="tab active" data-tab="time">時間換算</button>
     <button class="tab" data-tab="price">商品比較</button>
     <button class="tab" data-tab="microwave">レンジ換算</button>
+    <button class="tab" data-tab="counter">カウンター</button>
   </div>
 
   <!-- 時間換算 -->
@@ -426,6 +450,15 @@
         </div>
         <div class="note">計算上の目安です。食品の種類・量・容器・レンジの個体差で加熱具合は変わります。</div>
       </div>
+    </div>
+  </section>
+
+  <!-- カウンター -->
+  <section id="counter" class="panel">
+    <div class="card">
+      <h2>カウンター</h2>
+      <div class="note" style="margin-bottom:12px">8個それぞれ独立して自動保存されます。</div>
+      <div id="counterGrid" class="counter-grid"></div>
     </div>
   </section>
 </div>
@@ -598,6 +631,86 @@ $('mwCalc').addEventListener('click', () => {
 });
 
 updatePriceFields();
+
+const COUNTER_STORAGE_KEY = 'benriCounterV1';
+const COUNTER_COUNT = 8;
+
+function loadCounters(){
+  try{
+    const raw = localStorage.getItem(COUNTER_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : null;
+  }catch(e){ return null; }
+}
+
+function defaultCounter(i){
+  return {title:`カウンター${i+1}`, total:100, initial:0, current:0, memo:''};
+}
+
+let counters = loadCounters();
+if (!counters || counters.length !== COUNTER_COUNT){
+  counters = Array.from({length:COUNTER_COUNT}, (_,i)=>defaultCounter(i));
+}
+
+function saveCounters(){ localStorage.setItem(COUNTER_STORAGE_KEY, JSON.stringify(counters)); }
+function clampCounter(c){
+  c.total=Math.max(0,Number(c.total)||0);
+  c.initial=Math.max(0,Number(c.initial)||0);
+  if(c.initial>c.total)c.initial=c.total;
+  c.current=Math.max(0,Number(c.current)||0);
+  if(c.current>c.total)c.current=c.total;
+}
+function remainingClass(rem,total){
+  if(rem<=0)return 'done';
+  if(total<=0)return '';
+  const pct=rem/total*100;
+  if(pct<=5)return 'danger';
+  if(pct<=10)return 'warn';
+  return '';
+}
+function esc(s){return String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');}
+
+function renderCounters(){
+  const grid=$('counterGrid');
+  grid.innerHTML='';
+  counters.forEach((c,i)=>{
+    clampCounter(c);
+    const remaining=Math.max(0,c.total-c.current);
+    const decrement=Math.max(0,c.total-(c.current-c.initial));
+    const cls=remainingClass(remaining,c.total);
+    const card=document.createElement('div');
+    card.className='counter-card';
+    card.innerHTML=`
+      <input class="counter-title" type="text" maxlength="40" value="${esc(c.title)}" aria-label="カウンター${i+1}のタイトル">
+      <div class="counter-main"><div class="counter-current">${c.current}</div><div class="counter-total-inline">/ ${c.total}</div></div>
+      <div class="counter-buttons">
+        <button type="button" class="counter-btn minus" data-action="minus" data-index="${i}">−1</button>
+        <button type="button" class="counter-btn plus" data-action="plus" data-index="${i}">＋1</button>
+      </div>
+      <div class="counter-stats">
+        <div>デクリメント：<strong>${decrement}</strong></div>
+        <div class="counter-remaining ${cls}">${remaining===0?'完了！':`総数まであと ${remaining}`}</div>
+      </div>
+      <div class="counter-setup">
+        <div><label>総数</label><input type="number" min="0" step="1" inputmode="numeric" data-field="total" data-index="${i}" value="${c.total}"></div>
+        <div><label>初期値</label><input type="number" min="0" step="1" inputmode="numeric" data-field="initial" data-index="${i}" value="${c.initial}"></div>
+      </div>
+      <label>メモ</label>
+      <input class="counter-memo" type="text" maxlength="120" data-field="memo" data-index="${i}" value="${esc(c.memo)}" placeholder="1行メモ">
+      <button type="button" class="counter-reset" data-action="reset" data-index="${i}">このカウンターをリセット</button>`;
+    grid.appendChild(card);
+    const title=card.querySelector('.counter-title');
+    title.addEventListener('input',()=>{counters[i].title=title.value;saveCounters();});
+  });
+  grid.querySelectorAll('[data-action="plus"]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.index,c=counters[i];clampCounter(c);if(c.current<c.total)c.current++;saveCounters();renderCounters();}));
+  grid.querySelectorAll('[data-action="minus"]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.index,c=counters[i];clampCounter(c);if(c.current>0)c.current--;saveCounters();renderCounters();}));
+  grid.querySelectorAll('[data-action="reset"]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.index,c=counters[i],name=c.title||`カウンター${i+1}`;if(confirm(`「${name}」を初期値に戻しますか？`)){clampCounter(c);c.current=c.initial;saveCounters();renderCounters();}}));
+  grid.querySelectorAll('[data-field="total"],[data-field="initial"]').forEach(inp=>inp.addEventListener('change',()=>{const i=+inp.dataset.index,f=inp.dataset.field;counters[i][f]=Math.max(0,parseInt(inp.value||'0',10));if(f==='total'){if(counters[i].initial>counters[i].total)counters[i].initial=counters[i].total;if(counters[i].current>counters[i].total)counters[i].current=counters[i].total;}if(f==='initial'){if(counters[i].initial>counters[i].total)counters[i].initial=counters[i].total;counters[i].current=counters[i].initial;}saveCounters();renderCounters();}));
+  grid.querySelectorAll('[data-field="memo"]').forEach(inp=>inp.addEventListener('input',()=>{const i=+inp.dataset.index;counters[i].memo=inp.value;saveCounters();}));
+}
+renderCounters();
+
 </script>
 </body>
 </html>
