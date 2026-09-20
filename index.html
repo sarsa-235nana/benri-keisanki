@@ -448,17 +448,15 @@ function formatNumber(n, max=4){
 
 function splitSeconds(totalSeconds){
   let sec = Math.round(totalSeconds);
-  const years = Math.floor(sec / (365 * 86400)); sec %= (365 * 86400);
   const days = Math.floor(sec / 86400); sec %= 86400;
   const hours = Math.floor(sec / 3600); sec %= 3600;
   const mins = Math.floor(sec / 60); sec %= 60;
-  return {years, days, hours, mins, sec};
+  return {days, hours, mins, sec};
 }
 
 function humanTime(totalSeconds){
   const t = splitSeconds(totalSeconds);
   const parts = [];
-  if (t.years) parts.push(`${t.years}年`);
   if (t.days) parts.push(`${t.days}日`);
   if (t.hours) parts.push(`${t.hours}時間`);
   if (t.mins) parts.push(`${t.mins}分`);
